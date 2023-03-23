@@ -20,7 +20,7 @@ def normalizeCorrespondences(img_pts):
     
     hmg_pts = np.hstack((img_pts, np.ones((len(img_pts), 1))))
     normalized_pts = (transform_mtrx.dot(hmg_pts.T)).T
-    # print(normalized_pts)
+
     return normalized_pts, transform_mtrx
 
     
