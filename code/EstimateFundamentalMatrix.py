@@ -29,8 +29,9 @@ def estimateFundamentalMatrix(matches):
     x_p, T_p = normalizeCorrespondences(matches[:, 5:7])
     A_matrix = []
     for i in range(len(matches)):
-        A_row = [x[i][0]*x_p[i][0], x[i][0]*x_p[i][1], x[i][0], x[i][1]*x_p[i][0],
-                 x[i][1]*x_p[i][1], x[i][1], x_p[i][0], x_p[i][1], 1]
+        u, v = x[i, 0], x[i, 1]
+        u_p, v_p = x_p[i, 0], x_p[i, 1]
+        A_row = [u*u_p, u_p*v, u_p, u*v_p, v*v_p, v_p, u, v, 1]
         A_matrix.append(A_row)
     A_matrix = np.array(A_matrix)
     [U, S, V_T] = np.linalg.svd(A_matrix)
