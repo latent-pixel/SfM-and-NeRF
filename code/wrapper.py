@@ -45,8 +45,25 @@ for (C, R) in camera_poses:
     X_lst = linearTriangulation(K, np.zeros((3, 1)), np.eye(3), C, R, matches12[:, 3:5], matches12[:, 5:7])
     X_setCR.append(X_lst)
 
+# plotAllX(X_setCR)
+
+# C_set = [np.zeros((3, 1)), camera_poses[0][0]]
+# R_set = [np.eye(3), camera_poses[0][1]]
+# plotX2D(C_set, R_set, X_setCR[0])
+
+# C_set = [np.zeros((3, 1)), camera_poses[1][0]]
+# R_set = [np.eye(3), camera_poses[1][1]]
+# plotX2D(C_set, R_set, X_setCR[1])
+
+# C_set = [np.zeros((3, 1)), camera_poses[2][0]]
+# R_set = [np.eye(3), camera_poses[2][1]]
+# plotX2D(C_set, R_set, X_setCR[2])
+
+# C_set = [np.zeros((3, 1)), camera_poses[3][0]]
+# R_set = [np.eye(3), camera_poses[3][1]]
+# plotX2D(C_set, R_set, X_setCR[3])
+
 C_best, R_best, X_best = disambiguateCameraPose(camera_poses, X_setCR)
-print("The best camera config, C:\n", C_best, "\nR: \n", R_best)
 
 C_set = [np.zeros((3, 1)), C_best]
 R_set = [np.eye(3), R_best]
