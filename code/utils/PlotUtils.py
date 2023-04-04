@@ -53,7 +53,7 @@ def importImages(images_path):
     return all_images
 
 
-def drawMatches(img1, img2, matches):
+def drawMatches(img1, img2, matches, inlier_flags):
     w, h, c = img1.shape
     joined_image = np.concatenate((img1, img2), axis=1)
     img1_pts = matches[:, 3:5].astype(int)
@@ -61,10 +61,14 @@ def drawMatches(img1, img2, matches):
     for i in range(img1_pts.shape[0]):
         pt_img1 = (img1_pts[i, 0], img1_pts[i, 1])
         pt_img2 = (h+img2_pts[i, 0], img2_pts[i, 1])
-        # print(pt_img1, pt_img2)
-        joined_image = cv2.circle(joined_image, pt_img1, radius=0, color=(0, 0, 255), thickness=3)
-        joined_image = cv2.circle(joined_image, pt_img2, radius=0, color=(0, 0, 255), thickness=3)
-        joined_image = cv2.line(joined_image, pt_img1, pt_img2, color=(0, 255, 0), thickness=1)
+        if inlier_flags[i] == 0:
+            joined_image = cv2.circle(joined_image, pt_img1, radius=0, color=(0, 0, 255), thickness=3)
+            joined_image = cv2.circle(joined_image, pt_img2, radius=0, color=(0, 0, 255), thickness=3)
+            joined_image = cv2.line(joined_image, pt_img1, pt_img2, color=(0, 0, 255), thickness=1)
+        if inlier_flags[i] == 1:
+            joined_image = cv2.circle(joined_image, pt_img1, radius=0, color=(0, 255, 0), thickness=3)
+            joined_image = cv2.circle(joined_image, pt_img2, radius=0, color=(0, 255, 0), thickness=3)
+            joined_image = cv2.line(joined_image, pt_img1, pt_img2, color=(0, 255, 0), thickness=1)
     cv2.imshow("matches", joined_image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
@@ -74,7 +78,7 @@ def removeOutliers(X):
     dist = np.linalg.norm(X[:, :3], axis=1)
     mean =np.mean(dist, axis=0)
     sd = np.std(dist, axis=0)
-    inlier_idxs = np.where(dist <= mean + 2*sd)
+    inlier_idxs = np.where(dist <= mean + sd)
     return X[inlier_idxs]
 
 
@@ -96,5 +100,24 @@ def plotX2D(C_set, R_set, X):
     for i in range(len(C_set)):
         R = eulerAnglesFromRotationMatrix(R_set[i])
         r_y = R[1]
+        if r_y < 0: # check / verify
+            r_y = 180 + r_y 
+        plt.plot(C_set[i][0], C_set[i][2], marker=createCameraMarker(r_y), markersize=20)
+    plt.show()
+
+
+def plotNLT(C_set, R_set, X, X3D_nl):
+    X = removeOutliers(X)
+    X3D_nl = removeOutliers(X3D_nl)
+    x, z = X[:, 0], X[:, 2]
+    x_nl, z_nl = X3D_nl[:, 0], X3D_nl[:, 2]
+    plt.figure(figsize=(10, 10))
+    plt.scatter(x, z, marker='.', s=3, color='r')
+    plt.scatter(x_nl, z_nl, marker='.', s=3, color='b')
+    for i in range(len(C_set)):
+        R = eulerAnglesFromRotationMatrix(R_set[i])
+        r_y = R[1]
+        if r_y < 0: # check / verify
+            r_y = 180 + r_y 
         plt.plot(C_set[i][0], C_set[i][2], marker=createCameraMarker(r_y), markersize=20)
     plt.show()

@@ -19,5 +19,4 @@ def getInliers(matches, n_iter = 1000, eps = 0.01):
             inliers_idx = s
             best_F = F
 
-    inliers_set = matches[inliers_idx]
-    return inliers_set, best_F
+    return inliers_idx, best_F
