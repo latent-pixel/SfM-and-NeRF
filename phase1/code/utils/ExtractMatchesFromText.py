@@ -41,4 +41,3 @@ def createMatchesArray(folder_dir):
                         # print(curr_image, image_no, matches)     
     all_matches = np.array(all_matches, dtype=object)
     return all_matches
-

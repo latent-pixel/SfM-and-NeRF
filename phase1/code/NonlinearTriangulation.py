@@ -40,11 +40,11 @@ def ObjectiveFunction(X_tilde, match_, P1, P2):
 def NonlinearTriangulation(X_3D, matches, K, C1, R1, C2, R2):
     P1 = getProjectionMatrix(R1, C1, K)
     P2 = getProjectionMatrix(R2, C2, K)
-    X3D_nl = []
+    X3D_nl = [] # store the non-linear triangulated points
     for i in range(matches.shape[0]):
         X0 = X_3D[i]
         match_ = matches[i]
-        res = least_squares(ObjectiveFunction, X0, method='trf', ftol=1e-8, args=(match_, P1, P2))  # removed verbose = 2
+        res = least_squares(ObjectiveFunction, X0, method='trf', ftol=1e-4, args=(match_, P1, P2))  # removed verbose = 2
         X = res.x
         X = X / X[-1]
         X3D_nl.append(X)

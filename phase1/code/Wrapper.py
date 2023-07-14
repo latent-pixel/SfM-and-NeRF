@@ -29,7 +29,6 @@ for i in range(len(matches)-1):
         if i == 0 and j == 1:
             print("Processing matches for images {} and {}".format(i+1, j+1))
             matches_subset = np.array(matches[i, j])
-            # print(matches_subset)
             inlier_idxs, F_inliers[i, j] = getInliers(matches_subset)
             inliers[i, j] = matches_subset[inlier_idxs]
             is_inlier[i, j] = np.zeros(shape=(len(matches_subset), ))
@@ -38,9 +37,10 @@ print("Flag 1: Inliers found")
 
 # For the first two images:
 matches12 = inliers[0, 1]
-drawMatches(img1, img2, np.array(matches[0, 1]), is_inlier[0, 1])
+# drawMatches(img1, img2, np.array(matches[0, 1]), is_inlier[0, 1])
 
 F = estimateFundamentalMatrix(matches12)
+print("Fundamental Matrix: \n", F)
 E = computeEssentialMatrix(K, F)
 camera_poses = extractCameraPose(E)
 
@@ -74,5 +74,6 @@ C_set.append(C_best)
 R_set.append(R_best)
 # plotX2D(C_set, R_set, X_set)
 
-X_refined = NonlinearTriangulation(X_set, matches12, K, C_set[0], R_set[0], C_set[1], R_set[1])# Non-linear Triangulation
-plotNLT(C_set, R_set, X_set, X_refined)
+X_refined = NonlinearTriangulation(X_set, matches12, K, C_set[0], R_set[0], C_set[1], R_set[1]) # Non-linear Triangulation
+# plotNLT(C_set, R_set, X_set, X_refined)
+plotReprojection(img1, matches12[:, 3:5], X_set, X_refined, C_set[0], R_set[0], K)

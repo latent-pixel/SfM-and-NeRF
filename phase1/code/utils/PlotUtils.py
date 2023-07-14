@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import os
-from utils.MathUtils import eulerAnglesFromRotationMatrix
+from utils.MathUtils import *
 from matplotlib.path import Path
 from matplotlib import transforms
 from matplotlib.markers import MarkerStyle
@@ -86,9 +86,9 @@ def plotAllX(X_set):
     plt.figure(figsize=(10, 10))
     colors = ('red', 'cyan', 'greenyellow', 'magenta')
     for idx, X in enumerate(X_set):
-        X = removeOutliers(X)
+        # X = removeOutliers(X)
         x, z = X[:, 0], X[:, 2]
-        plt.scatter(x, z, marker='.', linewidths=0.5, color=colors[idx])
+        plt.scatter(x, z, marker='.', s=20, color=colors[idx])
     plt.show()
 
 
@@ -96,7 +96,7 @@ def plotX2D(C_set, R_set, X):
     X = removeOutliers(X)
     x, z = X[:, 0], X[:, 2]
     plt.figure(figsize=(10, 10))
-    plt.scatter(x, z, marker='.', linewidths=0.5, color='greenyellow')
+    plt.scatter(x, z, marker='.', s=20, color='greenyellow')
     for i in range(len(C_set)):
         R = eulerAnglesFromRotationMatrix(R_set[i])
         r_y = R[1]
@@ -107,17 +107,44 @@ def plotX2D(C_set, R_set, X):
 
 
 def plotNLT(C_set, R_set, X, X3D_nl):
-    X = removeOutliers(X)
-    X3D_nl = removeOutliers(X3D_nl)
+    # X = removeOutliers(X)
+    # X3D_nl = removeOutliers(X3D_nl)
     x, z = X[:, 0], X[:, 2]
     x_nl, z_nl = X3D_nl[:, 0], X3D_nl[:, 2]
-    plt.figure(figsize=(10, 10))
-    plt.scatter(x, z, marker='.', s=3, color='r')
-    plt.scatter(x_nl, z_nl, marker='.', s=3, color='b')
+    plt.figure("Non-Linear Triangulation", figsize=(10, 10))
+    plt.scatter(x, z, marker='.', s=20, color='r')
+    plt.scatter(x_nl, z_nl, marker='.', s=20, color='b')
     for i in range(len(C_set)):
         R = eulerAnglesFromRotationMatrix(R_set[i])
         r_y = R[1]
-        if r_y < 0: # check / verify
-            r_y = 180 + r_y 
+        # if r_y < 0: # check / verify
+        #     r_y = 180 + r_y 
         plt.plot(C_set[i][0], C_set[i][2], marker=createCameraMarker(r_y), markersize=20)
     plt.show()
+
+
+def plotReprojection(image, x, X_tilde, X, C, R, K):
+    X_tilde = np.transpose(X_tilde)
+    X = np.transpose(X)
+    temp = image.copy()
+    P = getProjectionMatrix(R, C, K)
+    p1_T, p2_T, p3_T = P[0], P[1], P[2]
+
+    u_reproj = np.dot(p1_T, X_tilde) / np.dot(p3_T, X_tilde)
+    u_reproj = u_reproj.T
+    v_reproj = np.dot(p2_T, X_tilde) / np.dot(p3_T, X_tilde)
+    v_reproj = v_reproj.T
+
+    u_re = np.dot(p1_T, X) / np.dot(p3_T, X)
+    u_re = u_re.T
+    v_re = np.dot(p2_T, X) / np.dot(p3_T, X)
+    v_re = v_re.T
+    for i in range(len(x)):
+        u, v = x[i]
+        # temp = cv2.circle(image, (int(u_reproj[i]), int(v_reproj[i])), radius=2, color=(255, 0, 0), thickness=-1)
+        temp = cv2.circle(image, (int(u_re[i]), int(v_re[i])), radius=2, color=(0, 0, 255), thickness=-1)
+        temp = cv2.circle(image, (int(u), int(v)), radius=2, color=(0, 255, 0), thickness=-1)
+    cv2.imshow("reprojection", temp)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    
