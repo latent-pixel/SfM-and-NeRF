@@ -1,7 +1,5 @@
 import torch
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 
 def generate_rays(height, width, focal_length, extrinsic):
@@ -17,12 +15,31 @@ def generate_rays(height, width, focal_length, extrinsic):
     transformed_y = (y - height * 0.5) / focal_length
     
     # Obtaining ray direction vectors for every pixel in the image
-    direction_vecs = torch.stack([transformed_x, -transformed_y, -torch.ones(size=(transformed_x.size()))], dim=-1)
-    direction_vecs = direction_vecs[..., None, :]
-    world_direction_vecs = direction_vecs * R            # element-wise multiplication of vectors 
-    world_direction_vecs = torch.sum(world_direction_vecs, dim=-1) # and adding the corresponding vectors
+    ray_directions = torch.stack([transformed_x, -transformed_y, -torch.ones(size=(transformed_x.size()))], dim=-1)
+    ray_directions = ray_directions[..., None, :]
+    # Converting to world coordinate frame: element-wise multiplication of vectors and adding the corresponding components
+    ray_directions = ray_directions * R             
+    ray_directions = torch.sum(ray_directions, dim=-1)
 
     # All the rays have the same origin, i.e, the camera position in the world frame
-    world_origins = t.expand(world_direction_vecs.size())
+    ray_origins = t.expand(ray_directions.size())
 
-    return world_origins, world_direction_vecs
+    return ray_origins, ray_directions
+
+
+def stratified_sampling(ray_origins, ray_directions, near_plane, far_plane, num_samples):
+    # uniformly sampling at random from equally spaced bins along the ray
+    t_i = np.linspace(0.0, 1.0, num_samples+1)
+    t_i = near_plane + t_i * (far_plane - near_plane)
+    t_i = np.random.uniform(t_i[:-1], t_i[1:])
+    t_i = torch.tensor(t_i, dtype=torch.float32)
+    
+    # point on a ray: r = o + td, we now have t to obtain the points
+    t_i = t_i.expand(size = list(ray_directions.shape[:-1]) + [num_samples])
+    sampled_points = ray_origins[..., None, :] + t_i[..., None] * ray_directions[..., None, :]
+    # sampled_points = sampled_points.view(-1, 3)
+
+    return (sampled_points, t_i)
+
+
+# stratified_sampling(torch.ones(800, 800, 3), torch.ones(800, 800, 3), 2, 6, 10)
