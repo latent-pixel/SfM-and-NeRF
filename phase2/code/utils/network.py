@@ -11,31 +11,34 @@ class MLP(nn.Module):
         self.output_layer1 = nn.Linear(width, 1)
         self.block3 = nn.ModuleList([nn.Linear(num_features_d+width, width // 2)] + [nn.Linear(width, width) for i in range(depth3 - 1)])
         self.output_layer2 = nn.Linear(width // 2, 3)
+        self.relu = nn.ReLU()
+        self.sigmoid = nn.Sigmoid()
     
 
     def forward(self, x, d):
         x_skip = x
         for layer in self.block1:
-            x = F.relu(layer(x))
+            x = self.relu(layer(x))
         
         # concatenating encoded x
         x = torch.cat([x, x_skip], dim=-1)
         for i in range(len(self.block2)):
             layer = self.block2[i]
-            if i < len(self.block2)-1:
-                x = F.relu(layer(x))
-            else:
-                x = layer(x)
+            # if i < len(self.block2)-1:
+            #     x = self.relu(layer(x))
+            # else:
+            #     x = layer(x)
+            x = layer(x)
 
         # obtaining volume density
-        density = F.relu(self.output_layer1(x))
+        density = self.relu(self.output_layer1(x))
 
         # concatenating encoded d
         x = torch.cat([x, d], dim=-1)
         for layer in self.block3:
-            x = F.relu(layer(x))
+            x = self.relu(layer(x))
         
         # obtaining emitted color radiance (rgb) values
-        x = F.sigmoid(self.output_layer2(x))
+        rgb = self.sigmoid(self.output_layer2(x))
 
-        return torch.cat([x, density], dim=-1)
+        return torch.cat([rgb, density], dim=-1)

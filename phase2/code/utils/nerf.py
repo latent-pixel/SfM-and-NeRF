@@ -1,4 +1,5 @@
 import torch
+from torchsummary import summary
 from .ray_casting import generate_rays, stratified_sampling
 from .positional_encoding import positional_encoding
 from .network import MLP
@@ -21,13 +22,12 @@ def nerf(height, width, focal_length, extrinsic, near_plane, far_plane,
     x_posenc = positional_encoding(query_pts, Lx).to(device)
     d_posenc = positional_encoding(query_pt_directions, Ld).to(device)
 
-    # mlp = MLP(x_posenc.shape[-1], d_posenc.shape[-1], width=128).to(device)
-
     # chunking the data so that the network doesn't get overwhelmed (although I'm yet to see the advantage)
     x_chunks = torch.chunk(x_posenc, chunks=num_chunks)
     d_chunks = torch.chunk(d_posenc, chunks=num_chunks)
 
     # predicting color and density from the initialized network, and then reshaping the outputs into images
+    # summary(init_network, input_size=[x_chunks[0][0].shape, d_chunks[0][0].shape])
     rgb_sigma = []
     for i in range(len(x_chunks)):
         rgb_sigma.append(init_network(x_chunks[i], d_chunks[i]))
